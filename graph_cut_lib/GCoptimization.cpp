@@ -10,8 +10,8 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //   First we have functions for the base class
 /////////////////////////////////////////////////////////////////////////////////////////////////
-// Constructor for base class                                                       
-GCoptimization::GCoptimization(SiteID nSites, LabelID nLabels) 
+// Constructor for base class
+GCoptimization::GCoptimization(SiteID nSites, LabelID nLabels)
 : m_datacostIndividual(0)
 , m_smoothcostIndividual(0)
 , m_smoothcostFn(0)
@@ -41,18 +41,18 @@ GCoptimization::GCoptimization(SiteID nSites, LabelID nLabels)
 		if (m_labeling) delete [] m_labeling;
 		handleError("Not enough memory");
 
-		
+
 	}
-	
+
 	for ( LabelID i = 0; i < m_num_labels; i++ )
 		m_labelTable[i] = i;
-		
+
 
 	for ( SiteID i = 0; i < m_num_sites; i++ ){
 		m_labeling[i] = (LabelID) 0;
 		m_lookupSiteVar[i] = (SiteID) -1;
 	}
-	
+
 	srand((unsigned int) time(NULL));
 }
 
@@ -74,14 +74,14 @@ GCoptimization::~GCoptimization()
 
 //------------------------------------------------------------------
 
-void GCoptimization::setDataCost(DataCostFn fn) { 
+void GCoptimization::setDataCost(DataCostFn fn) {
 	specializeDataCostFunctor(DataCostFnFromFunction(fn));
 }
 
 
 //------------------------------------------------------------------
 
-void GCoptimization::setDataCost(DataCostFnExtra fn, void *extraData) { 
+void GCoptimization::setDataCost(DataCostFnExtra fn, void *extraData) {
 	specializeDataCostFunctor(DataCostFnFromFunctionExtra(fn, extraData));
 }
 
@@ -141,7 +141,7 @@ void GCoptimization::setSmoothCost(LabelID l1, GCoptimization::LabelID l2, Energ
 		m_smoothcostIndividual = new EnergyTermType[m_num_labels*m_num_labels];
 		memset(m_smoothcostIndividual, 0, m_num_labels*m_num_labels*sizeof(EnergyTermType));
 		specializeSmoothCostFunctor(SmoothCostFnFromArray(m_smoothcostIndividual, m_num_labels));
-	} 
+	}
 	m_smoothcostIndividual[l1*m_num_labels + l2] = e;
 }
 
@@ -157,27 +157,27 @@ void GCoptimization::setSmoothCostFunctor(SmoothCostFunctor* f) {
 }
 
 //-------------------------------------------------------------------
- 
+
 GCoptimization::EnergyType GCoptimization::giveSmoothEnergy()
 {
 
 	if (readyToOptimise())
 		return(  (this->*m_giveSmoothEnergyInternal)() );
-	else{ 
+	else{
 		handleError("Not ready to optimize yet. Set up data and smooth costs first");
 		return(0);
 	}
 
 }
 //-------------------------------------------------------------------
- 
+
 GCoptimization::EnergyType GCoptimization::giveDataEnergy()
 {
 
 
 	if (readyToOptimise())
 		return( (this->*m_giveDataEnergyInternal)() );
-	else{ 
+	else{
 		handleError("Not ready to optimize yet. Set up data and smooth costs first");
 		return(0);
 	}
@@ -185,12 +185,12 @@ GCoptimization::EnergyType GCoptimization::giveDataEnergy()
 }
 
 //-------------------------------------------------------------------
- 
+
 GCoptimization::EnergyType GCoptimization::compute_energy()
 {
 	if (readyToOptimise())
 		return( (this->*m_giveDataEnergyInternal)()+ (this->*m_giveSmoothEnergyInternal)());
-	else{ 
+	else{
 		handleError("Not ready to optimize yet. Set up data and smooth costs first");
 		return(0);
 	}
@@ -207,8 +207,8 @@ void GCoptimization::scramble_label_table()
 
    for ( cnt = 0; cnt < num_times; cnt++ )
    {
-      r1 = rand()%m_num_labels;  
-      r2 = rand()%m_num_labels;  
+      r1 = rand()%m_num_labels;
+      r2 = rand()%m_num_labels;
 
       temp             = m_labelTable[r1];
       m_labelTable[r1] = m_labelTable[r2];
@@ -223,7 +223,7 @@ GCoptimization::EnergyType GCoptimization::expansion(int max_num_iterations )
 {
 	int curr_cycle = 1;
 	EnergyType new_energy,old_energy;
-	
+
 
 	new_energy = compute_energy();
 
@@ -233,7 +233,7 @@ GCoptimization::EnergyType GCoptimization::expansion(int max_num_iterations )
 	{
 		old_energy = new_energy;
 		new_energy = oneExpansionIteration();
-		curr_cycle++;	
+		curr_cycle++;
 	}
 
 	return(new_energy);
@@ -278,14 +278,14 @@ void GCoptimization::handleError(const char *message)
 
 
 //-------------------------------------------------------------------//
-//                  METHODS for EXPANSION MOVES                      //  
+//                  METHODS for EXPANSION MOVES                      //
 //-------------------------------------------------------------------//
 
 void GCoptimization::set_up_expansion_energy(SiteID size, LabelID alpha_label,Energy *e,
 											VarID *variables, SiteID *activeSites )
 {
 
-	
+
 	(this->*m_set_up_t_links_expansion)(size,alpha_label,e,variables,activeSites);
 	(this->*m_set_up_n_links_expansion)(size,alpha_label,e,variables,activeSites);
 }
@@ -293,15 +293,15 @@ void GCoptimization::set_up_expansion_energy(SiteID size, LabelID alpha_label,En
 
 //-------------------------------------------------------------------
 // Sets up the energy and optimizes it. Also updates labels of sites, if needed. ActiveSites
-// are the sites participating in expansion. They are not labeled alpha currrently                                                                    
+// are the sites participating in expansion. They are not labeled alpha currrently
 void GCoptimization::solveExpansion(SiteID size,SiteID *activeSites,LabelID alpha_label)
 {
 	SiteID i,site;
-	
+
 	if ( !readyToOptimise() ) handleError("Set up data and smoothness terms first. ");
 	if ( size == 0 ) return;
 
-	
+
 	Energy *e = new Energy(error_function);
 
 	Energy::Var *variables = (Energy::Var *) new Energy::Var[size];
@@ -310,9 +310,9 @@ void GCoptimization::solveExpansion(SiteID size,SiteID *activeSites,LabelID alph
 		variables[i] = e ->add_variable();
 
 	set_up_expansion_energy(size,alpha_label,e,variables,activeSites);
-		
+
 	Energy::TotalValue Emin = e -> minimize();
-		
+
 	for ( i = 0; i < size; i++ )
 	{
 		site = activeSites[i];
@@ -330,14 +330,14 @@ void GCoptimization::solveExpansion(SiteID size,SiteID *activeSites,LabelID alph
 	delete e;
 }
 //-------------------------------------------------------------------
-// alpha expansion on all sites not currently labeled alpha                         
+// alpha expansion on all sites not currently labeled alpha
 void GCoptimization::alpha_expansion(LabelID alpha_label)
 {
 	SiteID i  = 0, size = 0;
 	assert( alpha_label >= 0 && alpha_label < m_num_labels);
 
 	SiteID *activeSites = new SiteID[m_num_sites];
-	
+
 	for ( i = 0; i < m_num_sites; i++ )
 	{
 		if ( m_labeling[i] != alpha_label )
@@ -354,12 +354,12 @@ void GCoptimization::alpha_expansion(LabelID alpha_label)
 }
 
 //-------------------------------------------------------------------
-// alpha expansion on subset of sites in array *sites                             
+// alpha expansion on subset of sites in array *sites
 void GCoptimization::alpha_expansion(LabelID alpha_label, SiteID *sites, SiteID num )
 {
-	SiteID i,size = 0; 
+	SiteID i,size = 0;
 	SiteID *activeSites = new SiteID[num];
-	
+
 	for ( i = 0; i < num; i++ )
 	{
 		if ( m_labeling[sites[i]] != alpha_label )
@@ -371,7 +371,7 @@ void GCoptimization::alpha_expansion(LabelID alpha_label, SiteID *sites, SiteID 
 	}
 
 	solveExpansion(size,activeSites,alpha_label);
-	
+
 	delete [] activeSites;
 }
 
@@ -382,25 +382,25 @@ GCoptimization::EnergyType GCoptimization::oneExpansionIteration()
 	LabelID next;
 
 	if (m_random_label_order) scramble_label_table();
-	
+
 	for (next = 0;  next < m_num_labels;  next++ )
 	{
 		alpha_expansion(m_labelTable[next]);
 	}
-	
+
 	return(compute_energy());
 }
 
 //-------------------------------------------------------------------//
-//                  METHODS for SWAP MOVES                           //  
+//                  METHODS for SWAP MOVES                           //
 //-------------------------------------------------------------------//
 
 GCoptimization::EnergyType GCoptimization::swap(int max_num_iterations )
 {
-	
+
 	int curr_cycle = 1;
 	EnergyType new_energy,old_energy;
-	
+
 
 	new_energy = compute_energy();
 
@@ -410,8 +410,8 @@ GCoptimization::EnergyType GCoptimization::swap(int max_num_iterations )
 	{
 		old_energy = new_energy;
 		new_energy = oneSwapIteration();
-		
-		curr_cycle++;	
+
+		curr_cycle++;
 	}
 
 	return(new_energy);
@@ -422,16 +422,16 @@ GCoptimization::EnergyType GCoptimization::swap(int max_num_iterations )
 GCoptimization::EnergyType GCoptimization::oneSwapIteration()
 {
 	LabelID next,next1;
-   
+
 	if (m_random_label_order) scramble_label_table();
-		
+
 
 	for (next = 0;  next < m_num_labels;  next++ )
 		for (next1 = m_num_labels - 1;  next1 >= 0;  next1-- )
 			if ( m_labelTable[next] < m_labelTable[next1] )
 				alpha_beta_swap(m_labelTable[next],m_labelTable[next1]);
 
-	
+
 	return(compute_energy());
 }
 
@@ -443,7 +443,7 @@ void GCoptimization::alpha_beta_swap(LabelID alpha_label, LabelID beta_label)
 
 	SiteID i  = 0, size = 0;
 	SiteID *activeSites = new SiteID[m_num_sites];
-	
+
 	for ( i = 0; i < m_num_sites; i++ )	{
 		if ( m_labeling[i] == alpha_label || m_labeling[i] == beta_label ){
 			activeSites[size] = i;
@@ -459,14 +459,14 @@ void GCoptimization::alpha_beta_swap(LabelID alpha_label, LabelID beta_label)
 }
 //-----------------------------------------------------------------------------------
 
-void GCoptimization::alpha_beta_swap(LabelID alpha_label, LabelID beta_label, 
-		                   SiteID *alphaSites, SiteID alpha_size, SiteID *betaSites, 
+void GCoptimization::alpha_beta_swap(LabelID alpha_label, LabelID beta_label,
+		                   SiteID *alphaSites, SiteID alpha_size, SiteID *betaSites,
 						   SiteID beta_size)
 
 {
 	assert( !(alpha_label < 0 || alpha_label >= m_num_labels || beta_label < 0 || beta_label >= m_num_labels) );
 	SiteID i,site,size = 0;
-		
+
 	SiteID *activeSites = new SiteID[alpha_size+beta_size];
 
 	for ( i = 0; i < alpha_size; i++ )
@@ -505,11 +505,11 @@ void GCoptimization::solveSwap(SiteID size,SiteID *activeSites,LabelID alpha_lab
 {
 
 	SiteID i,site;
-	
+
 	if ( !readyToOptimise() ) handleError("Set up data and smoothness terms first. ");
 	if ( size == 0 ) return;
 
-	
+
 	Energy *e = new Energy(error_function);
 	Energy::Var *variables = (Energy::Var *) new Energy::Var[size];
 
@@ -517,9 +517,9 @@ void GCoptimization::solveSwap(SiteID size,SiteID *activeSites,LabelID alpha_lab
 		variables[i] = e ->add_variable();
 
 	set_up_swap_energy(size,alpha_label,beta_label,e,variables,activeSites);
-		
+
 	Energy::TotalValue Emin = e -> minimize();
-		
+
 	for ( i = 0; i < size; i++ )
 	{
 		site = activeSites[i];
@@ -550,7 +550,7 @@ void GCoptimization::set_up_swap_energy(SiteID size,LabelID alpha_label,LabelID 
 GCoptimizationGridGraph::GCoptimizationGridGraph(SiteID width, SiteID height,LabelID num_labels)
 						:GCoptimization(width*height,num_labels)
 {
-	
+
 	assert( (width > 1) && (height > 1) && (num_labels > 1 ));
 
 	m_weightedGraph = 0;
@@ -574,7 +574,7 @@ GCoptimizationGridGraph::GCoptimizationGridGraph(SiteID width, SiteID height,Lab
 	SiteID indexesUR[2] = {-1,m_width};
 	SiteID indexesDL[2] = {1,-m_width};
 	SiteID indexesDR[2] = {-1,-m_width};
-    
+
 	setupNeighbData(1,m_height-1,1,m_width-1,4,indexes);
 
 	setupNeighbData(1,m_height-1,0,1,3,indexesL);
@@ -627,7 +627,7 @@ bool GCoptimizationGridGraph::readyToOptimise()
 
 //-------------------------------------------------------------------
 
-void GCoptimizationGridGraph::setSmoothCostVH(EnergyTermType *smoothArray, EnergyTermType *vCosts, EnergyTermType *hCosts)
+extern "C" void GCoptimizationGridGraph::setSmoothCostVH(EnergyTermType *smoothArray, EnergyTermType *vCosts, EnergyTermType *hCosts)
 {
 	setSmoothCost(smoothArray);
 	m_weightedGraph = 1;
@@ -640,7 +640,7 @@ void GCoptimizationGridGraph::giveNeighborInfo(SiteID site, SiteID *numSites, Si
 {
 	*numSites  = m_numNeighbors[site];
 	*neighbors = &m_neighbors[site*4];
-	
+
 	if (m_weightedGraph) *weights  = &m_neighborsWeights[site*4];
 	else *weights = m_unityWeights;
 }
@@ -652,7 +652,7 @@ void GCoptimizationGridGraph::computeNeighborWeights(EnergyTermType *vCosts,Ener
 	SiteID i,n,nSite;
 	GCoptimization::EnergyTermType weight;
 
-	
+
 	m_neighborsWeights = new EnergyTermType[m_num_sites*4];
 
 	for ( i = 0; i < m_num_sites; i++ )
@@ -664,7 +664,7 @@ void GCoptimizationGridGraph::computeNeighborWeights(EnergyTermType *vCosts,Ener
 			else if (i-nSite == -1 )       weight = hCosts[i];
 			else if ( i-nSite == m_width ) weight = vCosts[nSite];
 			else if (i-nSite == -m_width ) weight = vCosts[i];
-	
+
 			m_neighborsWeights[i*4+n] = weight;
 		}
 	}
@@ -677,7 +677,7 @@ void GCoptimizationGridGraph::computeNeighborWeights(EnergyTermType *vCosts,Ener
 GCoptimizationGeneralGraph::GCoptimizationGeneralGraph(SiteID num_sites,LabelID num_labels):GCoptimization(num_sites,num_labels)
 {
 	assert( num_sites > 1 && num_labels > 1 );
-    
+
 	m_neighborsIndexes = 0;
 	m_neighborsWeights = 0;
 	m_numNeighbors     = 0;
@@ -691,8 +691,8 @@ GCoptimizationGeneralGraph::GCoptimizationGeneralGraph(SiteID num_sites,LabelID 
 
 GCoptimizationGeneralGraph::~GCoptimizationGeneralGraph()
 {
-		
-	if ( m_neighbors ){		
+
+	if ( m_neighbors ){
 		delete [] m_neighbors;
 	}
 
@@ -712,7 +712,7 @@ GCoptimizationGeneralGraph::~GCoptimizationGeneralGraph()
 		delete [] m_neighborsWeights;
 	}
 
-	
+
 }
 
 //-------------------------------------------------------------------
@@ -728,21 +728,21 @@ bool GCoptimizationGeneralGraph::readyToOptimise()
 
 void GCoptimizationGeneralGraph::finishSettingNeighbors()
 {
-	
+
 	Neighbor *tmp;
 	SiteID i,site,count;
 
 	m_needToFinishSettingNeighbors = false;
-	
+
 	EnergyTermType *tempWeights = new EnergyTermType[m_num_sites];
 	SiteID *tempIndexes         = new SiteID[m_num_sites];
-	
+
 	if ( !tempWeights || !tempIndexes ) handleError("Not enough memory");
 
 	m_numNeighbors     = new SiteID[m_num_sites];
 	m_neighborsIndexes = new SiteID*[m_num_sites];
 	m_neighborsWeights = new EnergyTermType*[m_num_sites];
-	
+
 	if ( !m_numNeighbors || !m_neighborsIndexes || !m_neighborsWeights ) handleError("Not enough memory");
 
 	for ( site = 0; site < m_num_sites; site++ )
@@ -751,7 +751,7 @@ void GCoptimizationGeneralGraph::finishSettingNeighbors()
 		{
 			m_neighbors[site].setCursorFront();
 			count = 0;
-			
+
 			while ( m_neighbors[site].hasNext() )
 			{
 				tmp = (Neighbor *) (m_neighbors[site].next());
@@ -763,9 +763,9 @@ void GCoptimizationGeneralGraph::finishSettingNeighbors()
 			m_numNeighbors[site]     = count;
 			m_neighborsIndexes[site] = new SiteID[count];
 			m_neighborsWeights[site] = new EnergyTermType[count];
-			
+
 			if ( !m_neighborsIndexes[site] || !m_neighborsWeights[site] ) handleError("Not enough memory");
-			
+
 			for ( i = 0; i < count; i++ )
 			{
 				m_neighborsIndexes[site][i] = tempIndexes[i];
@@ -779,12 +779,12 @@ void GCoptimizationGeneralGraph::finishSettingNeighbors()
 	delete [] tempIndexes;
 	delete [] tempWeights;
 	delete [] m_neighbors;
-	m_neighbors = (LinkedBlockList *) new LinkedBlockList[1]; 
+	m_neighbors = (LinkedBlockList *) new LinkedBlockList[1];
 	// this signals that the neibhorhood system is set, in case user calls setAllNeighbors
 }
 //------------------------------------------------------------------------------
 
-void GCoptimizationGeneralGraph::giveNeighborInfo(SiteID site, SiteID *numSites, 
+void GCoptimizationGeneralGraph::giveNeighborInfo(SiteID site, SiteID *numSites,
 												  SiteID **neighbors, EnergyTermType **weights)
 {
 	(*numSites)  =  m_numNeighbors[site];
@@ -818,7 +818,7 @@ void GCoptimizationGeneralGraph::setNeighbors(SiteID site1, SiteID site2, Energy
 
 	m_neighbors[site1].addFront(temp1);
 	m_neighbors[site2].addFront(temp2);
-	
+
 }
 //------------------------------------------------------------------
 
@@ -833,4 +833,3 @@ void GCoptimizationGeneralGraph::setAllNeighbors(SiteID *numNeighbors,SiteID **n
 	m_neighborsIndexes = neighborsIndexes;
 	m_neighborsWeights = neighborsWeights;
 }
-
